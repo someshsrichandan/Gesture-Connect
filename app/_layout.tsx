@@ -1,8 +1,11 @@
 import { Stack, Link } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Pressable, TouchableOpacity } from "react-native";
+import { Pressable } from "react-native";
+import { useRouter } from "expo-router";
 
 export default function Layout() {
+    const router = useRouter();
+
     return (
         <Stack>
             <Stack.Screen
@@ -11,11 +14,14 @@ export default function Layout() {
                     title: "Home",
                     headerRight: () => {
                         return (
-                            <Link href="/profile">
-                                <TouchableOpacity hitSlop={20}>
-                                    <MaterialIcons name="account-circle" size={40} color="black" />
-                                </TouchableOpacity>
-                            </Link>
+                            <Pressable
+                                onPress={() => {
+                                    router.navigate("/profile");
+                                }}
+                                hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                            >
+                                <MaterialIcons name="account-circle" size={40} color="black" />
+                            </Pressable>
                         );
                     },
                 }}

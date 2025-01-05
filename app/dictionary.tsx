@@ -1,12 +1,21 @@
 import React, { useState } from "react";
-import { Text, View, StyleSheet, FlatList, TouchableOpacity, Image } from "react-native";
+import {
+    Text,
+    View,
+    StyleSheet,
+    FlatList,
+    TouchableOpacity,
+    Image,
+    Dimensions,
+    ScrollView,
+} from "react-native";
 
 // Define the interface for a sign
 interface Sign {
     id: string;
     name: string;
     description: string;
-    image: any; // You can also use ImageSourcePropType from 'react-native' for stricter typing
+    image: any; // Use ImageSourcePropType from 'react-native' for stricter typing if preferred
 }
 
 // Sample data for recently used signs with images
@@ -29,6 +38,12 @@ const recentSignsData: Sign[] = [
         description: "Letter C in sign language",
         image: require("../assets/signs/letters/c.jpg"),
     },
+    {
+        id: "3",
+        name: "Morning",
+        description: "Word Morning in sign language",
+        image: require("../assets/signs/letters/morning.gif"),
+    },
     // Add more recent signs as needed
 ];
 
@@ -36,18 +51,18 @@ export default function Dictionary() {
     const [recentSigns] = useState<Sign[]>(recentSignsData);
 
     const renderSignItem = ({ item }: { item: Sign }) => (
-        <TouchableOpacity style={styles.signItem}>
+        <TouchableOpacity style={styles.signCard}>
             <Image source={item.image} style={styles.signImage} />
-            <View>
+            <View style={styles.signDetails}>
                 <Text style={styles.signName}>{item.name}</Text>
-                <Text>{item.description}</Text>
+                <Text style={styles.signDescription}>{item.description}</Text>
             </View>
         </TouchableOpacity>
     );
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.text}>Dictionary</Text>
+        <ScrollView style={styles.container}>
+            <Text style={styles.headerText}>Sign Language Dictionary</Text>
             <View style={styles.recentContainer}>
                 <Text style={styles.recentTitle}>Recently Used Signs</Text>
                 <FlatList
@@ -55,51 +70,71 @@ export default function Dictionary() {
                     keyExtractor={(item) => item.id}
                     renderItem={renderSignItem}
                     contentContainerStyle={styles.listContainer}
+                    scrollEnabled={false} // Disable scrolling as it's wrapped in ScrollView
                 />
             </View>
-        </View>
+        </ScrollView>
     );
 }
+
+const { width } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#fff",
-        padding: 16,
+        backgroundColor: "#f9f9f9",
+        paddingHorizontal: 16,
     },
-    text: {
-        fontSize: 24,
-        marginBottom: 20,
+    headerText: {
+        fontSize: 28,
+        fontWeight: "bold",
+        color: "#333",
+        textAlign: "center",
+        marginVertical: 20,
     },
     recentContainer: {
         width: "100%",
-        marginTop: 20,
+        marginTop: 10,
     },
     recentTitle: {
-        fontSize: 20,
-        fontWeight: "bold",
-        marginBottom: 10,
+        fontSize: 22,
+        fontWeight: "600",
+        color: "#555",
+        marginBottom: 12,
     },
     listContainer: {
-        paddingBottom: 100,
+        paddingBottom: 20,
     },
-    signItem: {
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: "#ccc",
+    signCard: {
         flexDirection: "row",
         alignItems: "center",
+        backgroundColor: "#fff",
+        borderRadius: 10,
+        marginVertical: 8,
+        padding: 12,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2, // For Android shadow
     },
     signImage: {
-        width: 50,
-        height: 50,
+        width: 60,
+        height: 60,
+        borderRadius: 8,
         marginRight: 16,
     },
+    signDetails: {
+        flex: 1,
+    },
     signName: {
-        fontWeight: "bold",
-        fontSize: 18,
+        fontSize: 20,
+        fontWeight: "700",
+        color: "#333",
+        marginBottom: 4,
+    },
+    signDescription: {
+        fontSize: 16,
+        color: "#666",
     },
 });

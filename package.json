@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-community/slider": "^4.5.5",
     "axios": "^1.7.9",
     "bot": "file:",
     "expo": "~52.0.18",

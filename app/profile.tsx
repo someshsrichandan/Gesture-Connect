@@ -37,12 +37,12 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ onEdit, onLogout }) => 
                 <View style={styles.avatarContainer}>
                     <View style={styles.avatarWrapper}>
                         <Image
-                            source={require("../assets/images/favicon.png")}
+                            source={require("../assets/images/user.png")}
                             style={styles.avatar}
                         />
                         <TouchableOpacity style={styles.editAvatarButton}>
                             <Image
-                                source={require("../assets/images/icon.png")}
+                                source={require("../assets/images/user.png")}
                                 style={styles.refreshIcon}
                             />
                         </TouchableOpacity>

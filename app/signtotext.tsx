@@ -1,13 +1,17 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useState, useEffect, useRef } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, TextInput } from 'react-native';
+import * as Speech from 'expo-speech';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function App() {
+export default function SignDetection({ navigation }) {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
+  const [sending, setSending] = useState(false); // Sending status
+  const [detectedText, setDetectedText] = useState(""); // Accumulated text
+  const [detectionMessage, setDetectionMessage] = useState(""); // Small feedback for "Not detected"
   const ws = useRef<WebSocket | null>(null);
-  const [detectedSign, setDetectedSign] = useState("No detection yet");
-  const cameraRef = useRef(null); // Reference for the CameraView
+  const cameraRef = useRef(null);
 
   const serverIp = '192.168.1.149'; // Replace with your local machine's IP
   const wsUrl = `ws://${serverIp}:8080`;
@@ -20,7 +24,13 @@ export default function App() {
     };
 
     ws.current.onmessage = (event) => {
-      setDetectedSign(event.data);
+      const correctedText = event.data;
+      if (correctedText === "No hand detected") {
+        setDetectionMessage("Not detected"); // Show feedback
+      } else if (!correctedText.includes("Error")) {
+        setDetectionMessage(""); // Clear feedback
+        setDetectedText((prevText) => `${prevText} ${correctedText}`.trim());
+      }
     };
 
     ws.current.onclose = () => {
@@ -39,19 +49,24 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const frameInterval = setInterval(() => {
-      processFrame();
-    }, 1000); // Process a frame every 100ms
+    let frameInterval;
+    if (sending) {
+      frameInterval = setInterval(() => {
+        processFrame();
+      }, 1000); // Process a frame every 1 second
+    } else {
+      clearInterval(frameInterval);
+    }
 
     return () => clearInterval(frameInterval);
-  }, []);
+  }, [sending]);
 
   const processFrame = async () => {
     if (cameraRef.current && ws.current && ws.current.readyState === WebSocket.OPEN) {
       try {
         const frame = await cameraRef.current.takePictureAsync({
           base64: true,
-          quality: 0.5, // Adjust quality to optimize performance
+          quality: 0.5,
         });
         if (frame && frame.base64) {
           ws.current.send(frame.base64); // Send the frame data to the WebSocket server
@@ -62,6 +77,30 @@ export default function App() {
     }
   };
 
+  const toggleSending = () => {
+    setSending((prevSending) => !prevSending);
+  };
+
+  const speakText = () => {
+    if (detectedText.trim() !== "") {
+      Speech.speak(detectedText, {
+        language: 'en', // Specify language if needed
+        pitch: 1.0,     // Set pitch level
+        rate: 1.0,      // Set speech rate
+      });
+    } else {
+      console.log("No text to speak");
+    }
+  };
+
+  const clearDetectedText = () => {
+    setDetectedText(""); // Clear detected text
+  };
+
+  const toggleCameraFacing = () => {
+    setFacing((current) => (current === 'back' ? 'front' : 'back'));
+  };
+
   if (!permission) {
     return <View />;
   }
@@ -69,25 +108,27 @@ export default function App() {
   if (!permission.granted) {
     return (
       <View style={styles.permissionContainer}>
-        <Text style={styles.permissionMessage}>We need your permission to show the camera</Text>
-        <Button onPress={requestPermission} title="Grant Permission" />
+        <Text style={styles.permissionMessage}>We need your permission to use the camera</Text>
+        <TouchableOpacity style={styles.button} onPress={requestPermission}>
+          <Text style={styles.buttonText}>Grant Permission</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
-  const toggleCameraFacing = () => {
-    setFacing((current) => (current === 'back' ? 'front' : 'back'));
-  };
-
   return (
     <View style={styles.container}>
-
-      {/* Top Bar for Detected Sign */}
+      {/* Top Navigation Bar */}
       <View style={styles.topBar}>
-        <Text style={styles.detectionText}>{detectedSign}</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Sign Detection')} style={styles.navButtonActive}>
+          <Text style={styles.navButtonTextActive}>Sign Detection</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Emotion Detection')} style={styles.navButton}>
+          <Text style={styles.navButtonText}>Emotion Detection</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Camera Container - smaller camera view */}
+      {/* Camera */}
       <View style={styles.cameraContainer}>
         <CameraView
           style={styles.camera}
@@ -96,13 +137,41 @@ export default function App() {
         />
       </View>
 
-      {/* Bottom bar with Flip Camera Button */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
-          <Text style={styles.flipText}>Flip Camera</Text>
+      {/* Detection Feedback */}
+      {detectionMessage ? (
+        <View style={styles.feedbackContainer}>
+          <Text style={styles.feedbackText}>{detectionMessage}</Text>
+        </View>
+      ) : null}
+
+      {/* Detected Text Field */}
+      <View style={styles.textFieldContainer}>
+        <TextInput
+          style={styles.textInput}
+          value={detectedText}
+          placeholder="Detected text will appear here"
+          editable={false}
+        />
+        <TouchableOpacity onPress={speakText}>
+          <Ionicons name="volume-high-outline" size={28} color="#3f51b5" />
         </TouchableOpacity>
       </View>
 
+      {/* Fixed Bottom Buttons */}
+      <View style={styles.fixedBottomControls}>
+        <TouchableOpacity
+          style={[styles.controlButton, sending ? styles.activeButton : styles.inactiveButton]}
+          onPress={toggleSending}
+        >
+          <Text style={styles.controlButtonText}>{sending ? 'Pause' : 'Start'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.controlButton} onPress={clearDetectedText}>
+          <Text style={styles.controlButtonText}>Clear</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.controlButton} onPress={toggleCameraFacing}>
+          <Text style={styles.controlButtonText}>Flip</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -110,64 +179,113 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f9f9f9',
   },
-  // Permission-related UI
-  permissionContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  permissionMessage: {
-    textAlign: 'center',
-    paddingBottom: 10,
-  },
-  // Top bar with detection text
   topBar: {
-    height: 60,
-    backgroundColor: '#3f51b5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    // You can add a shadow or elevation on Android if desired
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    paddingHorizontal: 15, // Added padding for better alignment
+    paddingTop: 10, // Added padding at the top
+    paddingBottom: 10, // Added padding at the bottom
+    backgroundColor: '#ffffff', // Optional: Background color for top bar
+    elevation: 3, // Adds shadow for Android
+    shadowColor: '#000', // Shadow for iOS
     shadowOpacity: 0.2,
-    elevation: 2,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    borderRadius: 10, // Rounded corners
   },
-  detectionText: {
+  navButton: {
+    flex: 1,
+    backgroundColor: '#e0e0e0',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  navButtonActive: {
+    flex: 1,
+    backgroundColor: '#3f51b5',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  navButtonText: {
+    color: '#555',
+    fontSize: 14,
+    fontWeight: '600', // Slightly bold text
+  },
+  navButtonTextActive: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '600', // Slightly bold text
   },
-  // Camera container
   cameraContainer: {
-    // fixed height for smaller camera view
-    height: 300, 
-    width: '100%',
+    flex: 1,
     backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 8,
+    marginHorizontal: 10,
+    marginBottom: 10,
   },
   camera: {
     flex: 1,
     width: '100%',
   },
-  // Bottom bar
-  bottomBar: {
-    height: 80,
-    justifyContent: 'center',
+  feedbackContainer: {
+    backgroundColor: '#ffe6e6',
+    padding: 5,
+    borderRadius: 5,
+    alignSelf: 'center',
+    marginBottom: 10,
+  },
+  feedbackText: {
+    color: '#a00',
+    fontSize: 12,
+  },
+  textFieldContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  button: {
-    backgroundColor: '#3f51b5',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    backgroundColor: '#fff',
     borderRadius: 8,
+    padding: 10,
+    elevation: 2,
+    marginHorizontal: 10,
+    marginBottom: 10,
   },
-  flipText: {
-    color: '#fff',
+  textInput: {
+    flex: 1,
     fontSize: 16,
-    fontWeight: 'bold',
+    color: '#333',
+  },
+  fixedBottomControls: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 10,
+    backgroundColor: '#f9f9f9',
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+  },
+  controlButton: {
+    backgroundColor: '#3f51b5',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  activeButton: {
+    backgroundColor: '#4caf50',
+  },
+  inactiveButton: {
+    backgroundColor: '#f44336',
+  },
+  controlButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    textAlign: 'center',
   },
 });

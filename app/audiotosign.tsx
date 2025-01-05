@@ -20,7 +20,6 @@ const { width } = Dimensions.get("window");
 const VoiceToSign = () => {
   const [recognizing, setRecognizing] = useState(false);
   const [queryText, setQueryText] = useState("");
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [speed, setSpeed] = useState("medium");
 
   const signDictionary = {
@@ -58,13 +57,13 @@ const VoiceToSign = () => {
     setQueryText(event.results[0]?.transcript || "");
   });
   useSpeechRecognitionEvent("error", (event) => {
-    console.log("Error code:", event.error, "Message:", event.message);
+    console.error("Speech recognition error:", event.message);
   });
 
   const handleStart = async () => {
     const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
     if (!result.granted) {
-      console.warn("Permissions not granted:", result);
+      console.warn("Permissions not granted.");
       return;
     }
     ExpoSpeechRecognitionModule.start({
@@ -79,45 +78,34 @@ const VoiceToSign = () => {
   };
 
   const getSignSequence = (inputText) => {
-    const words = inputText.toLowerCase().trim().split("");
-    return words.map((letter) => ({
-      type: "letter",
-      content: letter,
-      sign: signDictionary[letter] || null,
+    const characters = inputText.toLowerCase().trim().split("");
+    return characters.map((char) => ({
+      content: char,
+      sign: signDictionary[char] || null,
     }));
   };
 
   const signs = getSignSequence(queryText);
 
-  const handleSpeedChange = (newSpeed) => {
-    setSpeed(newSpeed);
-  };
+  const handleSpeedChange = (newSpeed) => setSpeed(newSpeed);
 
   return (
     <View style={styles.container}>
       <Text style={styles.languageTitle}>Sign Language</Text>
 
       <View style={styles.speedControlsContainer}>
-        <TouchableOpacity
-          style={[styles.speedButton, speed === "slow" && styles.activeSpeedButton]}
-          onPress={() => handleSpeedChange("slow")}
-        >
-          <Text style={styles.buttonText}>Slow</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.speedButton, speed === "medium" && styles.activeSpeedButton]}
-          onPress={() => handleSpeedChange("medium")}
-        >
-          <Text style={styles.buttonText}>Medium</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.speedButton, speed === "fast" && styles.activeSpeedButton]}
-          onPress={() => handleSpeedChange("fast")}
-        >
-          <Text style={styles.buttonText}>Fast</Text>
-        </TouchableOpacity>
+        {["slow", "medium", "fast"].map((speedOption) => (
+          <TouchableOpacity
+            key={speedOption}
+            style={[
+              styles.speedButton,
+              speed === speedOption && styles.activeSpeedButton,
+            ]}
+            onPress={() => handleSpeedChange(speedOption)}
+          >
+            <Text style={styles.buttonText}>{speedOption}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       <TouchableOpacity
