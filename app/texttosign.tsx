@@ -5,79 +5,57 @@ import {
   TextInput,
   TouchableOpacity,
   FlatList,
-  Image,
   StyleSheet,
-  ActivityIndicator,
   Dimensions,
   ImageSourcePropType,
 } from 'react-native';
+import { Image } from 'expo-image';
 
 const { width } = Dimensions.get('window');
-
 
 type SignItem = {
   type: 'word' | 'letter';
   content: string;
   sign: ImageSourcePropType;
+  isGif: boolean;
 };
 
 const TextToSignAlternate = () => {
   const [text, setText] = useState<string>('');
   const [currentWordIndex, setCurrentWordIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [speed, setSpeed] = useState<'slow' | 'normal' | 'fast'>('normal'); // slow, normal, fast
+  const [speed, setSpeed] = useState<'slow' | 'normal' | 'fast'>('normal');
 
-  
-  const signDictionary: Record<string, ImageSourcePropType> = {
-    'a': require('../assets/signs/letters/a.jpg'),
-    'b': require('../assets/signs/letters/b.jpg'),
-    'c': require('../assets/signs/letters/c.jpg'),
-    'd': require('../assets/signs/letters/d.jpg'),
-    'e': require('../assets/signs/letters/e.jpg'),
-    'f': require('../assets/signs/letters/f.jpg'),
-    'g': require('../assets/signs/letters/g.jpg'),
-    'h': require('../assets/signs/letters/h.jpg'),
-    'i': require('../assets/signs/letters/i.jpg'),
-    'j': require('../assets/signs/letters/j.jpg'),
-    'k': require('../assets/signs/letters/k.jpg'),
-    'l': require('../assets/signs/letters/l.jpg'),
-    'm': require('../assets/signs/letters/m.jpg'),
-    'n': require('../assets/signs/letters/n.jpg'),
-    'o': require('../assets/signs/letters/o.jpg'),
-    'p': require('../assets/signs/letters/p.jpg'),
-    'q': require('../assets/signs/letters/q.jpg'),
-    'r': require('../assets/signs/letters/r.jpg'),
-    's': require('../assets/signs/letters/s.jpg'),
-    't': require('../assets/signs/letters/t.jpg'),
-    'u': require('../assets/signs/letters/u.jpg'),
-    'v': require('../assets/signs/letters/v.jpg'),
-    'w': require('../assets/signs/letters/w.jpg'),
-    'x': require('../assets/signs/letters/x.jpg'),
-    'y': require('../assets/signs/letters/y.jpg'),
-    'z': require('../assets/signs/letters/z.jpg'),
+  const signDictionary: Record<string, { source: ImageSourcePropType; isGif: boolean }> = {
+    'a': { source: require('../assets/signs/letters/a.jpg'), isGif: false },
+    'b': { source: require('../assets/signs/letters/b.jpg'), isGif: false },
+    // ... other letters ...
+    'hello': { source: require('../assets/signs/letters/hello.gif'), isGif: true },
+    'good': { source: require('../assets/signs/letters/good.gif'), isGif: true },
+    'morning': { source: require('../assets/signs/letters/morning.gif'), isGif: true },
+    'you': { source: require('../assets/signs/letters/you.gif'), isGif: true },
   };
-
 
   const getSignSequence = (inputText: string): SignItem[] => {
     const words = inputText.toLowerCase().trim().split(/\s+/);
     const sequence: SignItem[] = [];
 
     words.forEach((word) => {
-     
       if (signDictionary[word]) {
         sequence.push({
           type: 'word',
           content: word,
-          sign: signDictionary[word],
+          sign: signDictionary[word].source,
+          isGif: signDictionary[word].isGif
         });
       } else {
-        
         word.split('').forEach((letter) => {
           if (signDictionary[letter]) {
             sequence.push({
               type: 'letter',
               content: letter,
-              sign: signDictionary[letter],
+              sign: signDictionary[letter].source,
+              isGif: signDictionary[letter].isGif
             });
           }
         });
@@ -87,17 +65,14 @@ const TextToSignAlternate = () => {
     return sequence;
   };
 
- 
   const togglePlay = () => {
     if (text.trim() === '') return;
-
     setIsPlaying(!isPlaying);
     if (!isPlaying) {
       playSequence();
     }
   };
 
-  
   const playSequence = () => {
     const sequence = getSignSequence(text);
     if (sequence.length === 0) return;
@@ -120,19 +95,18 @@ const TextToSignAlternate = () => {
     }, speedMap[speed]);
   };
 
-  
   const renderSignItem = ({ item }: { item: SignItem }) => (
     <View style={styles.signItem}>
       <Image
         source={item.sign}
         style={styles.signImage}
-        resizeMode="contain"
+        contentFit="contain"
+        transition={0}
       />
       <Text style={styles.signText}>{item.content}</Text>
     </View>
   );
 
-  
   const SpeedButton = ({ title, selected, onPress }: { title: string; selected: boolean; onPress: () => void }) => (
     <TouchableOpacity
       style={[styles.speedButton, selected && styles.speedButtonSelected]}
@@ -172,7 +146,12 @@ const TextToSignAlternate = () => {
       <View style={styles.currentSignContainer}>
         {signs.length > 0 && (
           <>
-            <Image source={signs[currentWordIndex].sign} style={styles.currentSignImage} resizeMode="contain" />
+            <Image 
+              source={signs[currentWordIndex].sign} 
+              style={styles.currentSignImage} 
+              contentFit="contain"
+              transition={0}
+            />
             <Text style={styles.currentSignText}>{signs[currentWordIndex].content}</Text>
           </>
         )}

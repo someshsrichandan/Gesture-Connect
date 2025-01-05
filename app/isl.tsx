@@ -1,0 +1,112 @@
+//isl.tsx 
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+
+const ISL = () => {
+  const router = useRouter();
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity 
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>Indian Sign Language</Text>
+      </View>
+      
+      <ScrollView style={styles.content}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Getting Started</Text>
+          <Text style={styles.text}>
+            Welcome to Indian Sign Language (ISL). ISL is used by the deaf 
+            community across India and is rich in cultural expressions and 
+            regional variations.
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Basic Signs</Text>
+          <TouchableOpacity style={styles.lessonButton}>
+            <Text style={styles.lessonButtonText}>Alphabet</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.lessonButton}>
+            <Text style={styles.lessonButtonText}>Numbers</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.lessonButton}>
+            <Text style={styles.lessonButtonText}>Greetings</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+// Shared styles for ASL and ISL screens
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFF8F0',
+  },
+  header: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+    backgroundColor: '#FFFFFF',
+  },
+  backButton: {
+    marginBottom: 10,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 12,
+  },
+  text: {
+    fontSize: 16,
+    color: '#333',
+    lineHeight: 24,
+  },
+  lessonButton: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+  },
+  lessonButtonText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+  },
+});
+
+export default ISL;
