@@ -64,7 +64,7 @@ export default function Dictionary() {
         <ScrollView style={styles.container}>
             <Text style={styles.headerText}>Sign Language Dictionary</Text>
             <View style={styles.recentContainer}>
-                <Text style={styles.recentTitle}>Recently Used Signs</Text>
+                <Text style={styles.recentTitle}>Frequently Used Signs</Text>
                 <FlatList
                     data={recentSigns}
                     keyExtractor={(item) => item.id}
