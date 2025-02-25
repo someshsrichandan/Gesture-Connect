@@ -6,7 +6,7 @@ import * as Speech from 'expo-speech';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-export default function SignDetection({ navigation }) {
+export default function emotion({ navigation }) {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const [sending, setSending] = useState(false); // Sending status
@@ -15,17 +15,14 @@ export default function SignDetection({ navigation }) {
   const [detectionMessage, setDetectionMessage] = useState(""); // Small feedback for "Not detected"
   const ws = useRef<WebSocket | null>(null);
   const cameraRef = useRef(null);
-  
-  const router = useRouter();
 
-
+const router = useRouter();
   useEffect(() => {
     // Load the server IP from AsyncStorage
     const loadServerIp = async () => {
       try {
         const storedIp = await AsyncStorage.getItem("serverUrl");
         if (storedIp) {
-          console.log("✅ Loaded server IP:", storedIp);
           setServerIp(storedIp);
         } else {
           console.warn("No server IP found. Please set it in settings.");
@@ -39,15 +36,9 @@ export default function SignDetection({ navigation }) {
 
   }, []);
   // const serverIp = '192.168.31.2'; // Replace with your local machine's IP
-  
-  useEffect(() => {
-    
-    if (!serverIp) {
-      console.warn("No server IP found. Please set it in settings.");
-      return;
-    }
-    const wsUrl = `ws://${serverIp}:8080`;
+  const wsUrl = `ws://${serverIp}:8080`;
 
+  useEffect(() => {
     ws.current = new WebSocket(wsUrl);
 
     ws.current.onopen = () => {
@@ -77,7 +68,7 @@ export default function SignDetection({ navigation }) {
         ws.current.close();
       }
     };
-  }, [serverIp]);
+  }, []);
 
   useEffect(() => {
     let frameInterval;
@@ -156,10 +147,10 @@ export default function SignDetection({ navigation }) {
     <View style={styles.container}>
       {/* Top Navigation Bar */}
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => router.navigate('Sign Detection')} style={styles.navButtonActive}>
+        <TouchableOpacity onPress={() => router.navigate('/signtotext')} style={styles.navButton}>
           <Text style={styles.navButtonTextActive}>Sign Detection</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.navigate('/emotion')} style={styles.navButton}>
+        <TouchableOpacity onPress={() => router.navigate('/emotion')} style={styles.navButtonActive}>
           <Text style={styles.navButtonText}>Emotion Detection</Text>
         </TouchableOpacity>
       </View>
@@ -249,7 +240,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   navButtonText: {
-    color: '#555',
+    color: '#fff',
     fontSize: 14,
     fontWeight: '600', // Slightly bold text
   },

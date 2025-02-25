@@ -32,6 +32,7 @@ export default function Layout() {
             <Stack.Screen name="learn" options={{ title: "Learn" }} />
             <Stack.Screen name="settings" options={{ title: "Settings" }} />
             <Stack.Screen name="dictionary" options={{ title: "Dictionary" }} />
+            <Stack.Screen name="emotion" options={{ title: "Emotion Detection" }} />
         </Stack>
     );
 }
