@@ -34,6 +34,7 @@
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="bot"/>
         <data android:scheme="com.anonymous.bot"/>
+        <data android:scheme="exp+gesture-aconnect"/>
       </intent-filter>
     </activity>
   </application>
