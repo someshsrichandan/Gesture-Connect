@@ -13,7 +13,7 @@ export default function SignDetection({ navigation }) {
   const ws = useRef<WebSocket | null>(null);
   const cameraRef = useRef(null);
 
-  const serverIp = '192.168.1.149'; // Replace with your local machine's IP
+  const serverIp = '192.168.31.2'; // Replace with your local machine's IP
   const wsUrl = `ws://${serverIp}:8080`;
 
   useEffect(() => {
@@ -107,11 +107,16 @@ export default function SignDetection({ navigation }) {
 
   if (!permission.granted) {
     return (
-      <View style={styles.permissionContainer}>
-        <Text style={styles.permissionMessage}>We need your permission to use the camera</Text>
-        <TouchableOpacity style={styles.button} onPress={requestPermission}>
-          <Text style={styles.buttonText}>Grant Permission</Text>
-        </TouchableOpacity>
+      <View style={styles.container2}>
+        <View style={styles.card}>
+          <Ionicons name="camera-outline" size={50} color="#3F51B5" style={styles.icon} />
+          <Text style={styles.permissionMessage}>
+            We need access to your camera to detect sign language gestures.
+          </Text>
+          <TouchableOpacity style={styles.button} onPress={requestPermission}>
+            <Text style={styles.buttonText}>Grant Permission</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -286,6 +291,48 @@ const styles = StyleSheet.create({
   controlButtonText: {
     color: '#fff',
     fontSize: 14,
+    textAlign: 'center',
+  },
+  container2: {
+    flex: 1,
+    backgroundColor: '#F4F6F9', // Light gray background for a soft look
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  card: {
+    width: '85%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5, // Shadow for Android
+  },
+  icon: {
+    marginBottom: 15,
+  },
+  permissionMessage: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  button: {
+    backgroundColor: '#3F51B5',
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 8,
+    alignItems: 'center',
+    width: '100%',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
     textAlign: 'center',
   },
 });
