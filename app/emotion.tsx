@@ -75,14 +75,14 @@ export default function emotion({ navigation }) {
         ws.current.close();
       }
     };
-  }, []);
+  }, [serverIp]);
 
   useEffect(() => {
     let frameInterval;
     if (sending) {
       frameInterval = setInterval(() => {
         processFrame();
-      }, 1000); // Process a frame every 1 second
+      }, 2000); // Process a frame every 1 second
     } else {
       clearInterval(frameInterval);
     }
