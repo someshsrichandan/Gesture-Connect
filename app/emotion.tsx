@@ -15,14 +15,16 @@ export default function emotion({ navigation }) {
   const [detectionMessage, setDetectionMessage] = useState(""); // Small feedback for "Not detected"
   const ws = useRef<WebSocket | null>(null);
   const cameraRef = useRef(null);
+  const router = useRouter();
 
-const router = useRouter();
+
   useEffect(() => {
     // Load the server IP from AsyncStorage
     const loadServerIp = async () => {
       try {
         const storedIp = await AsyncStorage.getItem("serverUrl");
         if (storedIp) {
+          console.log("✅ Loaded server IP:", storedIp);
           setServerIp(storedIp);
         } else {
           console.warn("No server IP found. Please set it in settings.");
@@ -36,9 +38,14 @@ const router = useRouter();
 
   }, []);
   // const serverIp = '192.168.31.2'; // Replace with your local machine's IP
-  const wsUrl = `ws://${serverIp}:8080`;
+//   const wsUrl = `ws://${serverIp}:8081`;
 
   useEffect(() => {
+    if (!serverIp) {
+        console.warn("No server IP found. Please set it in settings.");
+        return;
+      }
+    const wsUrl = `ws://${serverIp}:5000`;
     ws.current = new WebSocket(wsUrl);
 
     ws.current.onopen = () => {
