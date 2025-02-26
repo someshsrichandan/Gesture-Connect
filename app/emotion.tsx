@@ -22,7 +22,7 @@ export default function emotion({ navigation }) {
     // Load the server IP from AsyncStorage
     const loadServerIp = async () => {
       try {
-        const storedIp = await AsyncStorage.getItem("serverUrl");
+        const storedIp = await AsyncStorage.getItem("emotionServerUrl");
         if (storedIp) {
           console.log("✅ Loaded server IP:", storedIp);
           setServerIp(storedIp);
@@ -45,7 +45,7 @@ export default function emotion({ navigation }) {
         console.warn("No server IP found. Please set it in settings.");
         return;
       }
-    const wsUrl = `ws://${serverIp}:5000`;
+    const wsUrl = `ws://${serverIp}`;
     ws.current = new WebSocket(wsUrl);
 
     ws.current.onopen = () => {

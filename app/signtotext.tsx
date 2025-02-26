@@ -46,7 +46,7 @@ export default function SignDetection({ navigation }) {
       console.warn("No server IP found. Please set it in settings.");
       return;
     }
-    const wsUrl = `ws://${serverIp}:8080`;
+    const wsUrl = `ws://${serverIp}`;
 
     ws.current = new WebSocket(wsUrl);
 

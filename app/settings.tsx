@@ -27,13 +27,16 @@ const Settings: React.FC<SettingsProps> = ({
 }) => {
     const [textSize, setTextSize] = useState<number>(0.5);
     const [serverUrl, setServerUrl] = useState<string>("");
+    const [emotionServerUrl, setEmotionServerUrl] = useState<string>("");
 
     // Load saved settings
     useEffect(() => {
         const loadSettings = async () => {
             try {
                 const storedUrl = await AsyncStorage.getItem("serverUrl");
+                const storedEmotionUrl = await AsyncStorage.getItem("emotionServerUrl");
                 if (storedUrl) setServerUrl(storedUrl);
+                if (storedEmotionUrl) setEmotionServerUrl(storedEmotionUrl);
             } catch (error) {
                 console.error("Error loading settings:", error);
             }
@@ -43,12 +46,21 @@ const Settings: React.FC<SettingsProps> = ({
 
     // Save Server URL
     const saveServerUrl = async () => {
-        
         try {
             await AsyncStorage.setItem("serverUrl", serverUrl);
             Alert.alert("Success", "WebSocket server URL saved!");
         } catch (error) {
             console.error("Error saving server URL:", error);
+        }
+    };
+
+    // Save Emotion Server URL
+    const saveEmotionServerUrl = async () => {
+        try {
+            await AsyncStorage.setItem("emotionServerUrl", emotionServerUrl);
+            Alert.alert("Success", "Emotion WebSocket server URL saved!");
+        } catch (error) {
+            console.error("Error saving emotion server URL:", error);
         }
     };
 
@@ -59,7 +71,7 @@ const Settings: React.FC<SettingsProps> = ({
 
                 {/* WebSocket Server URL Input */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>WebSocket Server</Text>
+                    <Text style={styles.sectionTitle}>Sign Language WebSocket Server</Text>
                     <View style={styles.inputContainer}>
                         <Ionicons name="globe-outline" size={22} color="#3f51b5" />
                         <TextInput
@@ -72,6 +84,25 @@ const Settings: React.FC<SettingsProps> = ({
                         />
                     </View>
                     <TouchableOpacity style={styles.saveButton} onPress={saveServerUrl}>
+                        <Text style={styles.saveButtonText}>Save</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Emotion WebSocket Server URL Input */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Emotion WebSocket Server</Text>
+                    <View style={styles.inputContainer}>
+                        <Ionicons name="globe-outline" size={22} color="#3f51b5" />
+                        <TextInput
+                            style={styles.input}
+                            value={emotionServerUrl}
+                            onChangeText={setEmotionServerUrl}
+                            placeholder="Enter Emotion WebSocket URL"
+                            keyboardType="url"
+                            autoCapitalize="none"
+                        />
+                    </View>
+                    <TouchableOpacity style={styles.saveButton} onPress={saveEmotionServerUrl}>
                         <Text style={styles.saveButtonText}>Save</Text>
                     </TouchableOpacity>
                 </View>
