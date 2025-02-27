@@ -195,7 +195,7 @@ Example:
 
 Here is the reference image below. You can also see that an **APK release** is available, which you can install directly and run—just start the server!
 
-![APK Install & Server Setup](4.png)
+![APK Install & Server Setup](4.jpg)
 
 🚀 Now your React Native app is ready to use!
 
