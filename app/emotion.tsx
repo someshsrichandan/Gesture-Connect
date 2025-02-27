@@ -6,17 +6,25 @@ import * as Speech from 'expo-speech';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-export default function emotion({ navigation }) {
+export default function Emotion({ navigation }) {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const [sending, setSending] = useState(false); // Sending status
   const [detectedText, setDetectedText] = useState("");  // Accumulated text
   const [serverIp, setServerIp] = useState<string | null>(null);
   const [detectionMessage, setDetectionMessage] = useState(""); // Small feedback for "Not detected"
+  const [logs, setLogs] = useState<string[]>([]); // Logs for UI
   const ws = useRef<WebSocket | null>(null);
   const cameraRef = useRef(null);
   const router = useRouter();
 
+  // Add a log message to the UI
+  const addLog = (message: string) => {
+    setLogs((prevLogs) => [message, ...prevLogs]);
+    setTimeout(() => {
+      setLogs((prevLogs) => prevLogs.slice(0, -1)); // Remove the oldest log after 1 second
+    }, 1000);
+  };
 
   useEffect(() => {
     // Load the server IP from AsyncStorage
@@ -26,48 +34,55 @@ export default function emotion({ navigation }) {
         if (storedIp) {
           console.log("✅ Loaded server IP:", storedIp);
           setServerIp(storedIp);
+          addLog("✅ Loaded server IP");
         } else {
           console.warn("No server IP found. Please set it in settings.");
+          addLog("⚠️ No server IP found. Please set it in settings.");
         }
       } catch (error) {
         console.error("Error loading server IP:", error);
+        addLog("❌ Error loading server IP");
       }
     };
 
     loadServerIp();
-
   }, []);
-  // const serverIp = '192.168.31.2'; // Replace with your local machine's IP
-//   const wsUrl = `ws://${serverIp}:8081`;
 
   useEffect(() => {
     if (!serverIp) {
-        console.warn("No server IP found. Please set it in settings.");
-        return;
-      }
+      console.warn("No server IP found. Please set it in settings.");
+      addLog("⚠️ No server IP found. Please set it in settings.");
+      return;
+    }
+
     const wsUrl = `ws://${serverIp}`;
     ws.current = new WebSocket(wsUrl);
 
     ws.current.onopen = () => {
       console.log('Connected to WebSocket server');
+      addLog("✅ Connected to WebSocket server");
     };
 
     ws.current.onmessage = (event) => {
       const correctedText = event.data;
-      if (correctedText === "No hand detected") {
+      if (correctedText === "No emotion detected") {
         setDetectionMessage("Not detected"); // Show feedback
+        addLog("⚠️ No emotion detected");
       } else if (!correctedText.includes("Error")) {
         setDetectionMessage(""); // Clear feedback
         setDetectedText((prevText) => `${prevText} ${correctedText}`.trim());
+        addLog("✅ Detected emotion: " + correctedText);
       }
     };
 
     ws.current.onclose = () => {
       console.log('Disconnected from WebSocket server');
+      addLog("❌ Disconnected from WebSocket server");
     };
 
     ws.current.onerror = (error) => {
       console.error('WebSocket error:', error);
+      addLog("❌ WebSocket error: " + error);
     };
 
     return () => {
@@ -82,7 +97,7 @@ export default function emotion({ navigation }) {
     if (sending) {
       frameInterval = setInterval(() => {
         processFrame();
-      }, 2000); // Process a frame every 1 second
+      }, 2000); // Process a frame every 2 seconds
     } else {
       clearInterval(frameInterval);
     }
@@ -99,15 +114,18 @@ export default function emotion({ navigation }) {
         });
         if (frame && frame.base64) {
           ws.current.send(frame.base64); // Send the frame data to the WebSocket server
+          
         }
       } catch (error) {
         console.error('Error processing frame:', error);
+        addLog("❌ Error processing frame");
       }
     }
   };
 
   const toggleSending = () => {
     setSending((prevSending) => !prevSending);
+    addLog(sending ? "⏸️ Paused frame capture" : "▶️ Started frame capture");
   };
 
   const speakText = () => {
@@ -117,17 +135,21 @@ export default function emotion({ navigation }) {
         pitch: 1.0,     // Set pitch level
         rate: 1.0,      // Set speech rate
       });
+      addLog("🔊 Text spoken");
     } else {
       console.log("No text to speak");
+      addLog("⚠️ No text to speak");
     }
   };
 
   const clearDetectedText = () => {
     setDetectedText(""); // Clear detected text
+    addLog("🧹 Cleared detected text");
   };
 
   const toggleCameraFacing = () => {
     setFacing((current) => (current === 'back' ? 'front' : 'back'));
+    addLog("🔄 Camera flipped");
   };
 
   if (!permission) {
@@ -140,7 +162,7 @@ export default function emotion({ navigation }) {
         <View style={styles.card}>
           <Ionicons name="camera-outline" size={50} color="#3F51B5" style={styles.icon} />
           <Text style={styles.permissionMessage}>
-            We need access to your camera to detect sign language gestures.
+            We need access to your camera to detect emotions.
           </Text>
           <TouchableOpacity style={styles.button} onPress={requestPermission}>
             <Text style={styles.buttonText}>Grant Permission</Text>
@@ -160,6 +182,15 @@ export default function emotion({ navigation }) {
         <TouchableOpacity onPress={() => router.navigate('/emotion')} style={styles.navButtonActive}>
           <Text style={styles.navButtonText}>Emotion Detection</Text>
         </TouchableOpacity>
+      </View>
+
+      {/* Logs */}
+      <View style={styles.logsContainer}>
+        {logs.map((log, index) => (
+          <Text key={index} style={styles.logText}>
+            {log}
+          </Text>
+        ))}
       </View>
 
       {/* Camera */}
@@ -183,7 +214,7 @@ export default function emotion({ navigation }) {
         <TextInput
           style={styles.textInput}
           value={detectedText}
-          placeholder="Detected text will appear here"
+          placeholder="Detected emotion will appear here"
           editable={false}
         />
         <TouchableOpacity onPress={speakText}>
@@ -219,16 +250,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 10,
-    paddingHorizontal: 15, // Added padding for better alignment
-    paddingTop: 10, // Added padding at the top
-    paddingBottom: 10, // Added padding at the bottom
-    backgroundColor: '#ffffff', // Optional: Background color for top bar
-    elevation: 3, // Adds shadow for Android
-    shadowColor: '#000', // Shadow for iOS
+    paddingHorizontal: 15,
+    paddingTop: 10,
+    paddingBottom: 10,
+    backgroundColor: '#ffffff',
+    elevation: 3,
+    shadowColor: '#000',
     shadowOpacity: 0.2,
     shadowRadius: 3,
     shadowOffset: { width: 0, height: 2 },
-    borderRadius: 10, // Rounded corners
+    borderRadius: 10,
+  },
+  logsContainer: {
+    position: 'absolute',
+    top: 70,
+    left: 10,
+    right: 10,
+    zIndex: 1,
+  },
+  logText: {
+    fontSize: 12,
+    color: '#333',
+    backgroundColor: '#fff',
+    padding: 5,
+    borderRadius: 5,
+    marginBottom: 5,
+    elevation: 2,
   },
   navButton: {
     flex: 1,
@@ -247,14 +294,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   navButtonText: {
-    color: '#fff',
+    color: '#555',
     fontSize: 14,
-    fontWeight: '600', // Slightly bold text
+    fontWeight: '600',
   },
   navButtonTextActive: {
     color: '#fff',
     fontSize: 14,
-    fontWeight: '600', // Slightly bold text
+    fontWeight: '600',
   },
   cameraContainer: {
     flex: 1,
@@ -324,7 +371,7 @@ const styles = StyleSheet.create({
   },
   container2: {
     flex: 1,
-    backgroundColor: '#F4F6F9', // Light gray background for a soft look
+    backgroundColor: '#F4F6F9',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -338,7 +385,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 5, // Shadow for Android
+    elevation: 5,
   },
   icon: {
     marginBottom: 15,
